@@ -1,5 +1,5 @@
 
-#define BUFFER_SIZE 10
+#define BUFFER_SIZE 1
 #include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -11,6 +11,8 @@ size_t	ft_strlen(const char *s)
 	size_t	i;
 
 	i = 0;
+	if(s == NULL)
+		return (0);
 	while (s[i])
 		i++;
 	return (i);
@@ -103,12 +105,19 @@ char	*ft_fill_buffer(int	fd)
 {
 	char	*buffer;
 	int	counter;
+	int check;
 
-	buffer = malloc(BUFFER_SIZE + 1);
+	buffer = ft_calloc(BUFFER_SIZE + 1, sizeof(char));
 	counter = 0;
-	while (counter <= BUFFER_SIZE)
+	check = 0;
+	while (counter < BUFFER_SIZE)
 	{
-		read(fd, &buffer[counter], sizeof(char));
+		check = read(fd, &buffer[counter], sizeof(char));
+		if(check < 0)
+		{
+			free(buffer);
+			return (NULL);
+		}
 		counter++;
 	}
 	buffer[counter] = 0;
@@ -129,7 +138,7 @@ size_t	ft_strlcpy(char *dst, const char *src, size_t size)
 	}
 	if (size != 0)
 	{
-		while (src[i] != 0 && (i < size - 1))
+		while (src[i] != 0 && (i <= size - 1))
 		{
 			dst[i] = src[i];
 			i++;
@@ -141,27 +150,49 @@ size_t	ft_strlcpy(char *dst, const char *src, size_t size)
 
 char	*get_next_line(int fd)
 {
-	char	*process_buff;
-	char	*ret;
+	static char	*process_buff;
+	int		buff_count;
 	char	*buffer;
 	int		line_index;
+	char	*ret;
 
-	buffer = ft_fill_buffer(fd);
-	process_buff = ft_strdup(buffer);
-	free (buffer);
-	line_index = ft_check_buff(process_buff);
-	if(line_index == -1)
+	buff_count = -1;
+	line_index = -1;
+	if (process_buff == NULL)
+		process_buff = ft_calloc(1, sizeof(char));
+	while (line_index == -1)
 	{
-		ft_fill_buffer(fd);
-		ft_strjoin(buffer, process_buff);
+		buffer = ft_fill_buffer(fd);
+			if(buffer == NULL || *buffer == 0)
+				return (NULL);
+		process_buff = ft_strjoin(process_buff, buffer);
+		line_index = ft_check_buff(process_buff);
+		free (buffer);
+		buff_count++;
 	}
-	else
-	{
-		ret = ft_calloc((line_index + 1), sizeof(char)); 
-		ft_strlcpy(ret, process_buff, line_index + 1);
-		free(process_buff);
-		return (ret);
-	}
+
+	ret = ft_calloc((line_index + 2 ), sizeof(char)); 
+	ft_strlcpy(ret, process_buff, line_index + 1);
+	process_buff = ft_strdup(process_buff + (line_index + 1));
+	//free(process_buff);
+	return (ret);
+
+	// while(line_index == -1)
+	// {
+	// 	buffer = ft_fill_buffer(fd);
+	// 	line_index = ft_check_buff(buffer);
+	// 	process_buff = ft_strdup(buffer);
+	// 	ret = ft_strjoin(buffer, process_buff);
+	// 	free(buffer);
+	// 	free(process_buff);
+	// }
+	// else
+	// {
+	// 	ret = ft_calloc((line_index + 1), sizeof(char)); 
+	// 	ft_strlcpy(ret, process_buff, line_index + 1);
+	// 	free(process_buff);
+	// 	return (ret);
+	// }
 
 }
 
@@ -186,13 +217,16 @@ int main()
 	}
 
 	// Write the text "hello" to the file
-	int bytes_written = fprintf(fp, "hello\n edee\n");
+
+	int bytes_written = fprintf(fp, "");
 	fclose(fp);
 	int fd = open("hello.txt", O_RDONLY);
-
+	printf("at the begging we run the program\n\n");
 	line = get_next_line(fd);
-	printf("%s", line);
-	//line = get_next_line(fd);
-	//printf("%s", line);
+	printf("first line is: %s", line);
+	line = get_next_line(fd);
+	printf("second line is: %s", line);
+	line = get_next_line(fd);
+	printf("third line is: %s", line);
 
 }
