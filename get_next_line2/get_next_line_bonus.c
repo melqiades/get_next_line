@@ -150,19 +150,35 @@ int	ft_check_buff(char* buffer, char *new_buffer)
 char	*ft_fill_buffer(int	fd)
 {
 	char	*buffer;
-	int data_read;
+	int	counter;
+	int check;
 
-	data_read = 0;
+	counter = 0;
+	check = 0;
 	buffer = ft_calloc(BUFFER_SIZE + 1, sizeof(char));
-	data_read = read(fd, buffer, sizeof(char) * (BUFFER_SIZE));
-	if (data_read < 0)
+	check = read(fd, &buffer[counter++], sizeof(char));
+	if (check < 0)
 	{
 		free(buffer);
 		return (NULL);
 	}
-	if (data_read == 0)
+	if (check == 0)
 		return (buffer);
-	*(buffer + data_read) = 0;
+	while (counter < BUFFER_SIZE)
+	{
+		// if (check < 0)
+		// {
+		// 	free(buffer);
+		// 	return (NULL);
+		// }
+		if (check == 0)
+			return (buffer);
+		if (buffer[counter - 1] == 0)
+			break ;
+		check = read(fd, &buffer[counter], sizeof(char));
+		counter++;
+	}
+	buffer[counter] = 0;
 	return (buffer);
 }
 
