@@ -1,3 +1,5 @@
+<img src="https://github.com/melqiades/get_next_line/assets/142016602/89ce4bc6-b23e-451d-bf4e-d11a21a332b1" width=10%>
+
 # get_next_line
 
 A C function that efficiently reads a single line from a file descriptor.
